@@ -20,15 +20,22 @@ def ID(anything):
 
 #============================ File I/O Functions ==============================
 
-def process_dir(dirName, proc=None, filterfunc=ID, data=[], delim='\t', **misc):
-    '''This is very primitive, will need to improve somewhat...'''
-    for fName in os.listdir(dirName):
-        if filterfunc(fName):
-            data = process_csv(os.path.join(dirName, fName), proc, data,
-                    delim=delim, fname=fName, **misc)
-    return data
+def list_to_plain_text(inputIter, newline='\n', itemType=str):
+    '''Takes a iterable, adds a new line character to the end of each of its
+    members and then returns a generator of the newly created items.
+    The idea is to convert some sequence that was created with no concern for
+    spliting it into lines into something that will produce a text file.
+    It is assumed that the only input types will be sequences of lists or
+    strings, because these are the only practically reasonable types to be
+    written to files.
+    It is also assumed that by default the sequence will consist of strings and
+    that the lines will be separated by a Unix newline character.
+    This behavior can be changed by passing different newline and/or itemType
+    arguments.
+    '''
+    return (l+itemType(newline) for l in inputIter)
 
-def process_table(fName, **fmtparams):
+def process_table_file(fName, **fmtparams):
     '''Given name of file and some formatting parameters opens the
     corresponding file and prepares it for processing.
     Returns a functor that expects some sort of procedure to run on the file.
@@ -59,7 +66,7 @@ def process_table(fName, **fmtparams):
     with open(fName, 'rU') as f:
         readIn = DictReader(f, **fmtparams)
 
-    def waiting_for_proc(proc=None, *misc, **kwmisc):
+    def apply_proc(proc=None, *misc, **kwmisc):
         '''Wrapper function for other functions (the proc argument).
         If proc is not given, simply returns a list of the lines in the file as
         dictionaries of column_name:column_value.
@@ -69,10 +76,18 @@ def process_table(fName, **fmtparams):
             for line in readIn:
                 data = proc(line, *misc, **kwmisc)
         else:
-            return list(readIn)
+            return iter(readIn)
         return data
 
-    return waiting_for_proc
+    return apply_proc
+
+def process_dir(dirName, proc=None, filterfunc=None, data=[], delim='\t', **misc):
+    '''This is very primitive, will need to improve somewhat...'''
+    unfiltered = iter(os.listdir(dirName))
+    for fName in iter(filter(filterfunc, unfiltered)):
+        data = process_csv(os.path.join(dirName, fName), proc, data,
+                delim=delim, fname=fName, **misc)
+    return data
 
 def write_to_csv(fName, data, header, **kwargs):
     '''Writes data to file specified by filename. 
