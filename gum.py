@@ -64,14 +64,11 @@ def process_table_file(fName, **fmtparams):
     :param fmtparams: parameters used by DictReader to open files
     '''
     
-    if 'fieldnames' in misc:
-        fields = misc['fieldnames']
-    else:
-        fields = None
-
+    #first we open the file and create a DictReader object
     with open(fName, 'rU') as f:
         readIn = DictReader(f, **fmtparams)
 
+    #then we define a function that expects some procedure and arguments
     def apply_proc(proc=None, data=[], *misc, **kwmisc):
         '''Wrapper function for other functions (the proc argument).
         If proc is not given, simply returns a list of the lines in the file as
@@ -79,9 +76,19 @@ def process_table_file(fName, **fmtparams):
         If proc is provided it is run on every line in the file along with
         whatever arguments that procedure requires.
         Can be equivalent to Map or Reduce paradigms depending on the specifics
-        of the procedure being applied.
+        of the procedure being applied, because 'data' can either be a list
+        that has new members appended to it as we loop through the file or it
+        can be, for instance, a number that gets modified with every iteration
+        over a line and reflects the result of some accumulation procedure.
+
+        :type proc: function or None
+        :param proc: the procedure (function) to be run through the file
         :type data: list by default, can be anything.
-        :param data: 
+        :param data: specifies what kind of object the proc should modify as it
+        loops through the lines of the file
+        
+        *misc and **kwmisc refer to (respectively) whatever positional and key word
+        arguments are needed for proc.
         '''
         if not proc:
         # if no procedure is passed, simply return the DictReader object
@@ -91,6 +98,7 @@ def process_table_file(fName, **fmtparams):
             data = proc(line, data, *misc, **kwmisc)
         return data
 
+    #return this function
     return apply_proc
 
 def proc_dir(dirName, proc, filterfunc=None, data=[], *misc, **kwmisc):
