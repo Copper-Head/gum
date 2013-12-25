@@ -48,7 +48,7 @@ def proc_table_file(procType, func=None, *args, **kwargs):
     If proc is not given, simply returns a function that given a file name and
     formatting parameters returns a DictReader object.
     
-    :type procType: string from {'map', 'reduce'}
+    :type procType: string from {'map', 'reduce', 'filter'}
     :param procType: specifies what procedure to use; currently supports map
     and reduce
     :type func: function or None
@@ -59,6 +59,7 @@ def proc_table_file(procType, func=None, *args, **kwargs):
 
     procs= {
             'map': imap,
+            'filter': ifilter,
             'reduce': reduce
             }
     
@@ -107,7 +108,7 @@ def proc_dir(procType, func, *args, **kwargs):
     If proc is not given, simply returns a function that given a file name and
     formatting parameters returns a DictReader object.
     
-    :type procType: string from {'map', 'reduce'}
+    :type procType: string from {'map', 'reduce', 'filter'}
     :param procType: specifies what procedure to use; currently supports map
     and reduce
     :type func: function or None
@@ -117,6 +118,7 @@ def proc_dir(procType, func, *args, **kwargs):
 
     procs= {
             'map': imap,
+            'filter': ifilter,
             'reduce': reduce
             }
     
@@ -148,20 +150,39 @@ def write_to_csv(fName, data, header, **kwargs):
     
     :type fName: string
     :param fName: name of the file to be created
-    :type data: list
-    :param data: list of dictionaries with no keys absent in the header list
+    :type data: iterable
+    :param data: some iterable of dictionaries each of which must not contain keys 
+    absent in the 'header' argument
     :type header: list
     :param header: list of columns to appear in the output
     :type **kwargs: dict
-    :param **kwargs: some parameters to be passed to DictWriter.
+    :param **kwargs: parameters to be passed to DictWriter.
     For instance, restvals specifies what to set empty cells to by default or
     'dialect' loads a whole host of parameters associated with a certain csv
-    dialect (eg. excel).
+    dialect (eg. "excel").
     '''
     with open(fName, 'w') as f:
         output = DictWriter(f, header, **kwargs)
         output.writeheader()
         output.writerows(data)
+
+def write_to_txt(fName, data, addNewLines=False, **kwargs):
+    '''Writes data to a text file.
+    
+    :type fName: string
+    :param fName: name of the file to be created
+    :type data: iterable
+    :param data: some iterable of strings or lists of strings
+    :type addNewLines: bool
+    :param addNewLines: determines if it's necessary to add newline chars to
+    members of list
+    :type kwargs: dict
+    :param kwargs: key word args to be passed to list_to_plain_text, if needed
+    '''
+    if addNewLines:
+        data = list_to_plain_text(data, **kwargs)
+    with open(fName, 'w') as f:
+        f.writelines(data)
 
 #============================ Data Manipulation Functions =====================
 
