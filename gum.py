@@ -2,12 +2,18 @@
 # If you care to read that, here's a link:
 # http://opensource.org/licenses/MIT
 
+# To-Do:
+# line filtering in process_table_file
+
 #===================== IMPORTS --- SETUP --- GLOBAL VARS ======================
 import os
 import sys
 import re
 from csv import DictReader, DictWriter
 from collections import *
+from itertools import *
+from functools import *
+from operator import *
 
 #============================ Boolean Functions ===============================
 
@@ -56,8 +62,8 @@ def process_table_file(fName, **fmtparams):
     :param fName: name of file to be processed
     :type fmtparams: dict
     :param fmtparams: parameters used by DictReader to open files
-
     '''
+    
     if 'fieldnames' in misc:
         fields = misc['fieldnames']
     else:
@@ -66,27 +72,52 @@ def process_table_file(fName, **fmtparams):
     with open(fName, 'rU') as f:
         readIn = DictReader(f, **fmtparams)
 
-    def apply_proc(proc=None, *misc, **kwmisc):
+    def apply_proc(proc=None, data=[], *misc, **kwmisc):
         '''Wrapper function for other functions (the proc argument).
         If proc is not given, simply returns a list of the lines in the file as
         dictionaries of column_name:column_value.
         If proc is provided it is run on every line in the file along with
-        whatever arguments that procedure requires.'''
-        if proc:
-            for line in readIn:
-                data = proc(line, *misc, **kwmisc)
-        else:
-            return iter(readIn)
+        whatever arguments that procedure requires.
+        Can be equivalent to Map or Reduce paradigms depending on the specifics
+        of the procedure being applied.
+        :type data: list by default, can be anything.
+        :param data: 
+        '''
+        if not proc:
+        # if no procedure is passed, simply return the DictReader object
+            return readIn
+        #otherwise loop over lines in readIn and apply proc to each one
+        for line in readIn:
+            data = proc(line, data, *misc, **kwmisc)
         return data
 
     return apply_proc
 
-def process_dir(dirName, proc=None, filterfunc=None, data=[], delim='\t', **misc):
-    '''This is very primitive, will need to improve somewhat...'''
+def proc_dir(dirName, proc, filterfunc=None, data=[], *misc, **kwmisc):
+    '''This function applies a procedure 'proc' to all the files in a directory
+    that satisfy the conditions specified in 'filterfunc'.
+    The latter is by default None, which returns all files in the directory.
+    Another default is that this function is basically the functional
+    programming "Map" function applied to all relevant files.
+    This behavior can be altered, howerver, by changing the 'data' argument and
+    making the corresponding changes in the procedure being passed.
+
+    :type dirName: string
+    :param dirName: name of directory
+    :type proc: function that takes data as an argument and produces something
+    of the same type as data
+    :param proc: name of directory
+    :type filterfunc: function from strings (file names) to truth values
+    :param filterfunc: filtering criteria for file names
+    :type data: List by default, but can be anything compatible with proc
+    :param data: whatever data structure we want to produce as a result of
+    processing a directory
+    :param *misc: any positional args needed for proc
+    :param **kwmisc: any keyword args needed for proc
+    '''
     unfiltered = iter(os.listdir(dirName))
-    for fName in iter(filter(filterfunc, unfiltered)):
-        data = process_csv(os.path.join(dirName, fName), proc, data,
-                delim=delim, fname=fName, **misc)
+    for fName in ifilter(filterfunc, unfiltered):
+        data = proc(os.path.join(dirName, fName), data, *misc, **kwmisc)
     return data
 
 def write_to_csv(fName, data, header, **kwargs):
