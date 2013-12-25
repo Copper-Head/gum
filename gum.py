@@ -41,65 +41,65 @@ def list_to_plain_text(inputIter, newline='\n', itemType=str):
     '''
     return (l+itemType(newline) for l in inputIter)
 
-def process_table_file(fName, **fmtparams):
-    '''Given name of file and some formatting parameters opens the
-    corresponding file and prepares it for processing.
-    Returns a functor that expects some sort of procedure to run on the file.
-    
-    Intended as a generic wrapper for opening a file and converting it to a
-    csv.DictReader object, then processing it in some way.
-    It is assumed that the file being processed is a parseable table with
-    values split up into columns separated by either whitespace or commas.
-    The formatting parameters are left unspecified on purpose, here are some
-    examples:
-    - fieldnames -> define your own header for the output 
-    - delimiter -> ',' or '\t'
-    - dialect 
-    One can also read up on them here:
-    http://docs.python.org/2/library/csv.html#csv-fmt-params
-
-    :type fName: string
-    :param fName: name of file to be processed
-    :type fmtparams: dict
-    :param fmtparams: parameters used by DictReader to open files
+def proc_table_file(procType, func=None, *args, **kwargs):
     '''
+    Optionally takes a procedure and its arguments and prepares them to be
+    applied to a file.
+    If proc is not given, simply returns a function that given a file name and
+    formatting parameters returns a DictReader object.
     
-    #first we open the file and create a DictReader object
-    with open(fName, 'rU') as f:
-        readIn = DictReader(f, **fmtparams)
+    :type procType: string from {'map', 'reduce'}
+    :param procType: specifies what procedure to use; currently supports map
+    and reduce
+    :type func: function or None
+    :param func: the function to be run through the file
+    '''
+    if proc:
+        partial_proc = partial(proc, *args, **kwargs)
 
-    #then we define a function that expects some procedure and arguments
-    def apply_proc(proc=None, data=[], *misc, **kwmisc):
-        '''Wrapper function for other functions (the proc argument).
-        If proc is not given, simply returns a list of the lines in the file as
-        dictionaries of column_name:column_value.
-        If proc is provided it is run on every line in the file along with
-        whatever arguments that procedure requires.
-        Can be equivalent to Map or Reduce paradigms depending on the specifics
-        of the procedure being applied, because 'data' can either be a list
-        that has new members appended to it as we loop through the file or it
-        can be, for instance, a number that gets modified with every iteration
-        over a line and reflects the result of some accumulation procedure.
-
-        :type proc: function or None
-        :param proc: the procedure (function) to be run through the file
-        :type data: list by default, can be anything.
-        :param data: specifies what kind of object the proc should modify as it
-        loops through the lines of the file
+    procs= {
+            'map': imap,
+            'reduce': reduce
+            }
+    
+    def open_table(fName, **fmtparams):
+        '''Given name of file and some formatting parameters opens the
+        corresponding file and
         
-        *misc and **kwmisc refer to (respectively) whatever positional and key word
-        arguments are needed for proc.
-        '''
-        if not proc:
-        # if no procedure is passed, simply return the DictReader object
-            return readIn
-        #otherwise loop over lines in readIn and apply proc to each one
-        for line in readIn:
-            data = proc(line, data, *misc, **kwmisc)
-        return data
+        Intended as a generic wrapper for opening a file and converting it to a
+        csv.DictReader object, then processing it in some way.
+        It is assumed that the file being processed is a parseable table with
+        values split up into columns separated by either whitespace or commas.
+        The formatting parameters are left unspecified on purpose, here are some
+        examples:
+        - fieldnames -> define your own header for the output 
+        - delimiter -> ',' or '\t'
+        - dialect 
+        One can also read up on them here:
+        http://docs.python.org/2/library/csv.html#csv-fmt-params
 
-    #return this function
-    return apply_proc
+        :type fName: string
+        :param fName: name of file to be processed
+        :type fmtparams: dict
+        :param fmtparams: parameters used by DictReader to open files
+        '''
+        #first we open the file and create a DictReader object
+        with open(fName, 'rU') as f:
+            readIn = DictReader(f, **fmtparams)
+        if not function:
+            return readIn
+        return procs[procType](partial_proc, readIn)
+    
+    return open_table
+
+def imap_table_file(func=None, *args, **kwargs):
+    return proc_table_file('map', func, *args, **kwargs)
+
+def reduce_table_file(func=None, *args, **kwargs):
+    return proc_table_file('reduce', func, *args, **kwargs)
+
+def unprocessed_csv(fName, **fmtparams):
+    return imap_table_file()(fName, **fmtparams)
 
 def proc_dir(dirName, proc, filterfunc=None, data=[], *misc, **kwmisc):
     '''This function applies a procedure 'proc' to all the files in a directory
