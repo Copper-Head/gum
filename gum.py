@@ -54,8 +54,8 @@ def proc_table_file(procType, func=None, *args, **kwargs):
     :type func: function or None
     :param func: the function to be run through the file
     '''
-    if proc:
-        partial_proc = partial(proc, *args, **kwargs)
+    if func:
+        func = partial(proc, *args, **kwargs)
 
     procs= {
             'map': imap,
@@ -63,11 +63,10 @@ def proc_table_file(procType, func=None, *args, **kwargs):
             }
     
     def open_table(fName, **fmtparams):
-        '''Given name of file and some formatting parameters opens the
-        corresponding file and
+        '''Given name of file and some formatting parameters opens the file
+        specified by the name as a DictReader object with the passed formatting
+        parameters.
         
-        Intended as a generic wrapper for opening a file and converting it to a
-        csv.DictReader object, then processing it in some way.
         It is assumed that the file being processed is a parseable table with
         values split up into columns separated by either whitespace or commas.
         The formatting parameters are left unspecified on purpose, here are some
@@ -86,9 +85,9 @@ def proc_table_file(procType, func=None, *args, **kwargs):
         #first we open the file and create a DictReader object
         with open(fName, 'rU') as f:
             readIn = DictReader(f, **fmtparams)
-        if not function:
+        if not func:
             return readIn
-        return procs[procType](partial_proc, readIn)
+        return procs[procType](func, readIn)
     
     return open_table
 
@@ -101,35 +100,52 @@ def reduce_table_file(func=None, *args, **kwargs):
 def unprocessed_csv(fName, **fmtparams):
     return imap_table_file()(fName, **fmtparams)
 
-def proc_dir(dirName, proc, filterfunc=None, data=[], *misc, **kwmisc):
-    '''This function applies a procedure 'proc' to all the files in a directory
-    that satisfy the conditions specified in 'filterfunc'.
-    The latter is by default None, which returns all files in the directory.
-    Another default is that this function is basically the functional
-    programming "Map" function applied to all relevant files.
-    This behavior can be altered, howerver, by changing the 'data' argument and
-    making the corresponding changes in the procedure being passed.
-
-    :type dirName: string
-    :param dirName: name of directory
-    :type proc: function that takes data as an argument and produces something
-    of the same type as data
-    :param proc: name of directory
-    :type filterfunc: function from strings (file names) to truth values
-    :param filterfunc: filtering criteria for file names
-    :type data: List by default, but can be anything compatible with proc
-    :param data: whatever data structure we want to produce as a result of
-    processing a directory
-    :param *misc: any positional args needed for proc
-    :param **kwmisc: any keyword args needed for proc
+def proc_dir(procType, func, *args, **kwargs):
     '''
-    unfiltered = iter(os.listdir(dirName))
-    for fName in ifilter(filterfunc, unfiltered):
-        data = proc(os.path.join(dirName, fName), data, *misc, **kwmisc)
-    return data
+    Takes a procedure and its arguments and prepares them to be
+    applied to a file.
+    If proc is not given, simply returns a function that given a file name and
+    formatting parameters returns a DictReader object.
+    
+    :type procType: string from {'map', 'reduce'}
+    :param procType: specifies what procedure to use; currently supports map
+    and reduce
+    :type func: function or None
+    :param func: the function to be run through the file
+    '''
+    partial_func = partial(proc, *args, **kwargs)
+
+    procs= {
+            'map': imap,
+            'reduce': reduce
+            }
+    
+    def open_dir(dirName, filterfunc=None):
+        '''This function applies partial_func from the enclosing environment
+        to all the files in a directory that satisfy the conditions specified 
+        in 'filterfunc'.
+        The latter is by default None, which returns all files in the directory.
+
+        :type dirName: string
+        :param dirName: name of directory
+        :type filterfunc: function from strings (file names) to truth values
+        :param filterfunc: filtering criteria for file names
+        '''
+        filtered = ifilter(filterfunc, iter(os.listdir(dirName)))
+        paths = (os.path.join(dirName, fName) for fName in filtered)
+        return procs[procType](partial_func, paths)
+
+    return open_dir
+
+def imap_dir(func, *args, **kwargs):
+    return proc_dir('map', func, *args, **kwargs)
+
+def reduce_dir(func, *args, **kwargs):
+    return proc_dir('reduce', func, *args, **kwargs)
 
 def write_to_csv(fName, data, header, **kwargs):
     '''Writes data to file specified by filename. 
+    
     :type fName: string
     :param fName: name of the file to be created
     :type data: list
@@ -138,7 +154,9 @@ def write_to_csv(fName, data, header, **kwargs):
     :param header: list of columns to appear in the output
     :type **kwargs: dict
     :param **kwargs: some parameters to be passed to DictWriter.
-    For instance, restvals specifies what to set empty cells to by default.
+    For instance, restvals specifies what to set empty cells to by default or
+    'dialect' loads a whole host of parameters associated with a certain csv
+    dialect (eg. excel).
     '''
     with open(fName, 'w') as f:
         output = DictWriter(f, header, **kwargs)
