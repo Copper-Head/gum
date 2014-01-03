@@ -1,5 +1,8 @@
 *.py[cod]
 
+# ropevim
+.rope*
+
 # C extensions
 *.so
 
