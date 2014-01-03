@@ -231,6 +231,18 @@ def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
 
 
 def pickle_data(data, fileName, ext='.picl'):
+    '''wrapper for picling any data.
+    :type data: any
+    :param data: python object to be pickled
+    :type fileName: string
+    :param fileName: specifies the name of the pickled file
+    :type ext: string
+    :param ext: adds and extension to the file name
+    '''
+    #sanity-checking the extension
+    if not ext.startswith('.'):
+        ext = '.' + ext
+
     with open(fileName + ext, 'w') as f:
         cPickle.dump(corpus, f)
 
