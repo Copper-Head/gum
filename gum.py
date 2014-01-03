@@ -10,6 +10,8 @@ import os
 import sys
 import re
 import logging
+import cPickle
+
 from csv import DictReader, DictWriter
 from collections import *
 from itertools import *
@@ -196,7 +198,7 @@ def write_to_txt(fName, data, addNewLines=False, **kwargs):
         f.writelines(data)
 
 
-#---------------------------- Logging Setups ---------------------------------
+#-------------------------- Logging and Pickling ------------------------------
 
 def create_debug_log(fName='error'):
     '''Will need to customize options for which date info to inclide in what order'''
@@ -210,6 +212,11 @@ def create_debug_log(fName='error'):
                           fName + '.log'])
     logging.basicConfig(filename=errorFile, level=logging.DEBUG)
     return logging.getLogger('example')
+
+
+def save_parsed_corpus(data, fileName, ext='.picl'):
+    with open(fileName + ext, 'w') as f:
+        cPickle.dump(corpus, f)
 
 
 #============================ Data Manipulation Functions =====================
