@@ -200,21 +200,37 @@ def write_to_txt(fName, data, addNewLines=False, **kwargs):
 
 #-------------------------- Logging and Pickling ------------------------------
 
-def create_debug_log(fName='error'):
-    '''Will need to customize options for which date info to inclide in what order'''
+def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
+    '''wrapper for creating a logger.
+
+    :type base: string
+    :param fileNameBase: base for the log file name to which date, time,
+    and the extension are later attached.
+    :type ext: string
+    :param ext: string for an extension
+    :type separator: string
+    :param separator: character used to separate different parts of the
+    filename
+    :type app: string
+    :param app: name for the application that generates the error
+    '''
+    #sanity-checking the extension
+    if not ext.startswith('.'):
+        ext = '.' + ext
 
     date = localtime()
+    #create log file name
     errorFile = '_'.join([str(date.tm_year),
                           str(date.tm_mon),
                           str(date.tm_mday),
                           str(date.tm_hour),
                           str(date.tm_min),
-                          fName + '.log'])
+                          base + ext])
     logging.basicConfig(filename=errorFile, level=logging.DEBUG)
-    return logging.getLogger('example')
+    return logging.getLogger(app)
 
 
-def save_parsed_corpus(data, fileName, ext='.picl'):
+def pickle_data(data, fileName, ext='.picl'):
     with open(fileName + ext, 'w') as f:
         cPickle.dump(corpus, f)
 
