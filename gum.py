@@ -90,11 +90,11 @@ def reduce_table_file(func=None, *args, **kwargs):
     return proc_table_file('reduce', func, *args, **kwargs)
 
 
-def unprocessed_csv(fName, **fmtparams):
-    return imap_table_file()(fName, **fmtparams)
+def unprocessed_csv(file_name, **fmtparams):
+    return imap_table_file()(file_name, **fmtparams)
 
 
-def proc_dir(procType, func, *args, **kwargs):
+def proc_dir(proc_type, func, *args, **kwargs):
     '''
     Takes a procedure and its arguments and prepares them to be
     applied to a file.
@@ -115,7 +115,7 @@ def proc_dir(procType, func, *args, **kwargs):
         'reduce': reduce
         }
 
-    def open_dir(dirName, filterfunc=None):
+    def open_dir(dir_name, filter_func=None):
         '''This function applies partial_func from the enclosing environment
         to all the files in a directory that satisfy the conditions specified
         in 'filterfunc'.
@@ -126,9 +126,9 @@ def proc_dir(procType, func, *args, **kwargs):
         :type filterfunc: function from strings (file names) to truth values
         :param filterfunc: filtering criteria for file names
         '''
-        filtered = ifilter(filterfunc, iter(os.listdir(dirName)))
-        paths = (os.path.join(dirName, fName) for fName in filtered)
-        return procs[procType](partial_func, paths)
+        filtered = ifilter(filter_func, iter(os.listdir(dir_name)))
+        paths = (os.path.join(dir_name, fname) for fname in filtered)
+        return procs[proc_type](partial_func, paths)
 
     return open_dir
 
@@ -141,7 +141,7 @@ def reduce_dir(func, *args, **kwargs):
     return proc_dir('reduce', func, *args, **kwargs)
 
 
-def write_to_csv(fName, data, header, **kwargs):
+def write_to_csv(file_name, data, header, **kwargs):
     '''Writes data to file specified by filename.
 
     :type fName: string
@@ -157,13 +157,13 @@ def write_to_csv(fName, data, header, **kwargs):
     'dialect' loads a whole host of parameters associated with a certain csv
     dialect (eg. "excel").
     '''
-    with open(fName, 'w') as f:
+    with open(file_name, 'w') as f:
         output = DictWriter(f, header, **kwargs)
         output.writeheader()
         output.writerows(data)
 
 
-def write_to_txt(fName, data, addNewLines=False, **kwargs):
+def write_to_txt(file_name, data, AddNewLines=False, **kwargs):
     '''Writes data to a text file.
 
     :type fName: string
@@ -176,9 +176,9 @@ def write_to_txt(fName, data, addNewLines=False, **kwargs):
     :type kwargs: dict
     :param kwargs: key word args to be passed to list_to_plain_text, if needed
     '''
-    if addNewLines:
+    if AddNewLines:
         data = list_to_plain_text(data, **kwargs)
-    with open(fName, 'w') as f:
+    with open(file_name, 'w') as f:
         f.writelines(data)
 
 
@@ -214,7 +214,7 @@ def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
     return logging.getLogger(app)
 
 
-def pickle_data(data, fileName, ext='.picl'):
+def pickle_data(data, file_name, ext='.picl'):
     '''wrapper for picling any data.
     :type data: any
     :param data: python object to be pickled
@@ -227,7 +227,7 @@ def pickle_data(data, fileName, ext='.picl'):
     if not ext.startswith('.'):
         ext = '.' + ext
 
-    with open(fileName + ext, 'w') as f:
+    with open(file_name + ext, 'w') as f:
         cPickle.dump(corpus, f)
 
 
@@ -261,25 +261,26 @@ def find_something(smthng, string, All=False):
     return regex.findall(string)[0]
 
 
-def subset_dict(srcDict, relevants, replace=False, exclude=False):
+def subset_dict(src_dict, relevants, replace=False, exclude=False):
     '''Given some keys and a dictionary returns a dictionary with only
     specified keys. Assumes the keys are in fact present and will raise an
     error if this is not the case'''
     '''Think about ways to make chains of maps: A > B + B > C turns into A >
     C'''
     if replace:
-        return dict((relevants[x], srcDict[x]) for x in relevants)
+        return dict((relevants[x], src_dict[x]) for x in relevants)
     if exclude:
         try:
-            return dict((x, srcDict[x]) for x in srcDict if x not in relevants)
+            return dict((x, src_dict[x]) for x in src_dict
+                        if x not in relevants)
         except Exception as e:
-            print 'Unable to process this: ', srcDict
+            print 'Unable to process this: ', src_dict
             raise
     try:
-        return dict((x, srcDict[x]) for x in relevants)
+        return dict((x, src_dict[x]) for x in relevants)
     except Exception as e:
-        print 'Unable to process this: ', srcDict
-        raise
+        print 'Unable to process this: ', src_dict
+        raise e
 
 
 #================================= __MAIN__ ===================================
