@@ -30,23 +30,7 @@ def ID(anything):
 
 #============================ File I/O Functions ==============================
 
-def list_to_plain_text(inputIter, newline='\n', itemType=str):
-    '''Takes a iterable, adds a new line character to the end of each of its
-    members and then returns a generator of the newly created items.
-    The idea is to convert some sequence that was created with no concern for
-    spliting it into lines into something that will produce a text file.
-    It is assumed that the only input types will be sequences of lists or
-    strings, because these are the only practically reasonable types to be
-    written to files.
-    It is also assumed that by default the sequence will consist of strings and
-    that the lines will be separated by a Unix newline character.
-    This behavior can be changed by passing different newline and/or itemType
-    arguments.
-    '''
-    return (l+itemType(newline) for l in inputIter)
-
-
-def proc_table_file(procType, func=None, *args, **kwargs):
+def proc_table_file(proc_type, func=None, *args, **kwargs):
     '''
     Optionally takes a procedure and its arguments and prepares them to be
     applied to a file.
@@ -60,7 +44,7 @@ def proc_table_file(procType, func=None, *args, **kwargs):
     :param func: the function to be run through the file
     '''
     if func:
-        func = partial(proc, *args, **kwargs)
+        func = partial(func, *args, **kwargs)
 
     procs = {
         'map': imap,
@@ -89,11 +73,11 @@ def proc_table_file(procType, func=None, *args, **kwargs):
         :param fmtparams: parameters used by DictReader to open files
         '''
         # first we open the file and create a DictReader object
-        with open(fName, 'rU') as f:
-            readIn = DictReader(f, **fmtparams)
+        read_in = DictReader(open(fName, 'rU'), **fmtparams)
+        # and simply return it if no function is passed
         if not func:
-            return readIn
-        return procs[procType](func, readIn)
+            return read_in
+        return procs[proc_type](func, read_in)
 
     return open_table
 
@@ -163,8 +147,8 @@ def write_to_csv(fName, data, header, **kwargs):
     :type fName: string
     :param fName: name of the file to be created
     :type data: iterable
-    :param data: some iterable of dictionaries each of which must not contain keys
-    absent in the 'header' argument
+    :param data: some iterable of dictionaries each of which
+    must not contain keys absent in the 'header' argument
     :type header: list
     :param header: list of columns to appear in the output
     :type **kwargs: dict
@@ -248,6 +232,26 @@ def pickle_data(data, fileName, ext='.picl'):
 
 
 #============================ Data Manipulation Functions =====================
+
+def add_newlines(input_iter, newline='\n', item_type=str):
+    '''Takes a iterable, adds a new line character to the end of each of its
+    members and then returns a generator of the newly created items.
+    The idea is to convert some sequence that was created with no concern for
+    spliting it into lines into something that will produce a text file.
+    It is assumed that the only input types will be sequences of lists or
+    strings, because these are the only practically reasonable types to be
+    written to files.
+    It is also assumed that by default the sequence will consist of strings and
+    that the lines will be separated by a Unix newline character.
+    This behavior can be changed by passing different newline and/or itemType
+    arguments.
+    '''
+    return (l + item_type(newline) for l in input_iter)
+
+
+def newline_list(input_list):
+    return add_newlines(input_list, item_type=list)
+
 
 def find_something(smthng, string, All=False):
     '''I'm not sure I should keep this'''
