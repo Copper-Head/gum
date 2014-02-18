@@ -3,7 +3,11 @@
 # http://opensource.org/licenses/MIT
 
 # To-Do:
-# line filtering in process_table_file
+# some automation of text file writing: functions to write to files with
+# new-lines or commas
+# some more general purpose function to create filenames with dates
+# currently that's hidden inside the log creation function, but can be useful
+# for other filename generation tasks as well.
 
 #===================== IMPORTS --- SETUP --- GLOBAL VARS ======================
 import os
@@ -20,12 +24,12 @@ from operator import *
 from time import localtime
 
 
-def ID(anything):
-    '''This function is mostly intended as a placeholder for functions that the
-    user may want to pass.
-    I am considering setting this to return the passed object instead of just
-    True.'''
-    return True
+#def ID(anything):
+    #'''This function is mostly intended as a placeholder for functions that the
+    #user may want to pass.
+    #I am considering setting this to return the passed object instead of just
+    #True.'''
+    #return True
 
 
 #============================ File I/O Functions ==============================
@@ -43,8 +47,8 @@ def proc_table_file(proc_type, func=None, *args, **kwargs):
     :type func: function or None
     :param func: the function to be run through the file
     '''
-    if func:
-        func = partial(func, *args, **kwargs)
+    #if func:
+        #func = partial(func, *args, **kwargs)
 
     procs = {
         'map': imap,
@@ -77,7 +81,8 @@ def proc_table_file(proc_type, func=None, *args, **kwargs):
         # and simply return it if no function is passed
         if not func:
             return read_in
-        return procs[proc_type](func, read_in)
+        # if func present, apply it in the specified way to the file
+        return procs[proc_type](func, read_in, *args, **kwargs)
 
     return open_table
 
@@ -107,7 +112,7 @@ def proc_dir(proc_type, func, *args, **kwargs):
     :type func: function or None
     :param func: the function to be run through the file
     '''
-    partial_func = partial(proc, *args, **kwargs)
+    partial_func = partial(func, *args, **kwargs)
 
     procs = {
         'map': imap,
