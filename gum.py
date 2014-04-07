@@ -149,8 +149,8 @@ def reduce_dir(func, *args, **kwargs):
 def write_to_csv(file_name, data, header, **kwargs):
     '''Writes data to file specified by filename.
 
-    :type fName: string
-    :param fName: name of the file to be created
+    :type file_name: string
+    :param file_name: name of the file to be created
     :type data: iterable
     :param data: some iterable of dictionaries each of which
     must not contain keys absent in the 'header' argument
@@ -168,7 +168,7 @@ def write_to_csv(file_name, data, header, **kwargs):
         output.writerows(data)
 
 
-def write_to_txt(file_name, data, AddNewLines=False, **kwargs):
+def write_to_txt(file_name, data, mode='w', AddNewLines=False, **kwargs):
     '''Writes data to a text file.
 
     :type fName: string
@@ -182,8 +182,8 @@ def write_to_txt(file_name, data, AddNewLines=False, **kwargs):
     :param kwargs: key word args to be passed to list_to_plain_text, if needed
     '''
     if AddNewLines:
-        data = list_to_plain_text(data, **kwargs)
-    with open(file_name, 'w') as f:
+        data = add_newlines(data, **kwargs)
+    with open(file_name, mode=mode) as f:
         f.writelines(data)
 
 
