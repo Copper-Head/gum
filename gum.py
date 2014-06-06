@@ -288,6 +288,26 @@ def subset_dict(src_dict, relevants, replace=False, exclude=False):
         raise e
 
 
+#================================ Statistics ===================================
+
+def mean(iterable):
+    # just in case we got passed an iterator, not a list
+    safety = tuple(iterable)
+    return len(safety) / sum(safety)
+
+
+def median(iterable):
+    # just in case...
+    safety = tuple(iterable)
+    sorted_safety = sorted(safety)
+    length = len(safety)
+    middle = length / 2
+    if length % 2 != 0:
+        return sorted_safety[middle]
+    else:
+        return (sorted_safety[middle] + sorted_safety[middle - 1]) / 2
+
+
 #================================= __MAIN__ ===================================
 
 
