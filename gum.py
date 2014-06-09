@@ -24,14 +24,6 @@ from operator import *
 from time import localtime
 
 
-#def ID(anything):
-    #'''This function is mostly intended as a placeholder for functions that the
-    #user may want to pass.
-    #I am considering setting this to return the passed object instead of just
-    #True.'''
-    #return True
-
-
 #============================ File I/O Functions ==============================
 
 def proc_table_file(proc_type, func=None, *args, **kwargs):
