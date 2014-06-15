@@ -16,7 +16,7 @@ import re
 import logging
 import cPickle
 
-from csv import DictReader, DictWriter
+import csv
 from collections import *
 from itertools import *
 from functools import *
@@ -26,119 +26,71 @@ from time import localtime
 
 #============================ File I/O Functions ==============================
 
-def proc_table_file(proc_type, func=None, *args, **kwargs):
+
+def gen_file_paths(dir_name, filter_func=None):
+    '''A function for wrapping all the os.path commands involved in listing files
+    in a directory, then turning file names into file paths by concatenating
+    them with the directory name.
+    This also optionally supports filtering file names using filter_func.
     '''
-    Optionally takes a procedure and its arguments and prepares them to be
-    applied to a file.
-    If proc is not given, simply returns a function that given a file name and
-    formatting parameters returns a DictReader object.
+    if filter_func:
+        just_file_names = filter(filter_func, os.listdir(dir_name))
+    else:
+        just_file_names = os.listdir(dir_name)
+    
+    return (os.path.join(dir_name, file_name) for file_name in just_file_names)
 
-    :type procType: string from {'map', 'reduce', 'filter'}
-    :param procType: specifies what procedure to use; currently supports map
-    and reduce
-    :type func: function or None
-    :param func: the function to be run through the file
+
+def read_table(file_name, function=None, **fmtparams):
+    ''' Function that simplifies reading it table files of any kind.'''
+    with open(file_name) as opened_file:
+        # if user hasn't defined a dialect, try to sniff it out
+        if 'dialect' not in fmtparams:
+            fmtparams['dialect'] = csv.Sniffer().sniff(opened_file.read(1024))
+            # this line resets the file object to its beginning
+            opened_file.seek(0)
+        # check if passed file has a header
+        detect_header = csv.Sniffer().has_header(opened_file.read(1024))
+        opened_file.seek(0)
+        # if column names were explicitly passed of header was detected...
+        if 'fieldnames' in fmtparams or detect_header:
+            # ,,, use Dictreader 
+            reader = csv.DictReader(opened_file, **fmtparams)
+        else:
+            # otherwise create a simple reader
+            reader = csv.reader(opened_file, **fmtparams)
+        if function:
+            return function(reader)
+        return tuple(reader)
+
+
+################################################################################
+## Writing to files
+################################################################################
+
+def create_row_dicts(fields, data, fill_val='NA'):
+    '''Helper generator function for the write_to_table(). Collecting data
+    is often much more efficient and clear when this data is stored in tuples
+    or lists, not dictionaries.
+    Python's csv DictWriter class requires that it be passed a sequence of 
+    dictionaries, however.
+    This function takes a header list of column names as well as some data in
+    the form of a sequence of rows (which can be tuples or lists) and converts
+    every row in the data to a dictionary usable by DictWriter.
     '''
-    #if func:
-        #func = partial(func, *args, **kwargs)
-
-    procs = {
-        'map': imap,
-        'filter': ifilter,
-        'reduce': reduce
-        }
-
-    def open_table(fName, **fmtparams):
-        '''Given name of file and some formatting parameters opens the file
-        specified by the name as a DictReader object with the passed formatting
-        parameters.
-
-        It is assumed that the file being processed is a parseable table with
-        values split up into columns separated by either whitespace or commas.
-        The formatting parameters are left unspecified on purpose, here are some
-        examples:
-        - fieldnames -> define your own header for the output
-        - delimiter -> ',' or '\t'
-        - dialect
-        One can also read up on them here:
-        http://docs.python.org/2/library/csv.html#csv-fmt-params
-
-        :type fName: string
-        :param fName: name of file to be processed
-        :type fmtparams: dict
-        :param fmtparams: parameters used by DictReader to open files
-        '''
-        # first we open the file and create a DictReader object
-        read_in = DictReader(open(fName, 'rU'), **fmtparams)
-        # and simply return it if no function is passed
-        if not func:
-            return read_in
-        # if func present, apply it in the specified way to the file
-        return procs[proc_type](func, read_in, *args, **kwargs)
-
-    return open_table
+    for row in data:
+        length_difference = len(fields) - len(row)
+        error_message = 'There are more rows than labels for them: {0}'
+        if length_difference < 0:
+            print('Here are the column labels', fields)
+            print('Here are the rows', row)
+            raise Exception(error_message.format(length_difference))
+        elif length_difference > 0:
+            row = row + (fill_val,) * length_difference
+        yield dict(zip(fields, row))
 
 
-def imap_table_file(func=None, *args, **kwargs):
-    return proc_table_file('map', func, *args, **kwargs)
-
-
-def reduce_table_file(func=None, *args, **kwargs):
-    return proc_table_file('reduce', func, *args, **kwargs)
-
-
-def unprocessed_csv(file_name, **fmtparams):
-    return imap_table_file()(file_name, **fmtparams)
-
-
-def proc_dir(proc_type, func, *args, **kwargs):
-    '''
-    Takes a procedure and its arguments and prepares them to be
-    applied to a file.
-    If proc is not given, simply returns a function that given a file name and
-    formatting parameters returns a DictReader object.
-
-    :type procType: string from {'map', 'reduce', 'filter'}
-    :param procType: specifies what procedure to use; currently supports map
-    and reduce
-    :type func: function or None
-    :param func: the function to be run through the file
-    '''
-    partial_func = partial(func, *args, **kwargs)
-
-    procs = {
-        'map': imap,
-        'filter': ifilter,
-        'reduce': reduce
-        }
-
-    def open_dir(dir_name, filter_func=None):
-        '''This function applies partial_func from the enclosing environment
-        to all the files in a directory that satisfy the conditions specified
-        in 'filterfunc'.
-        The latter is by default None, which returns all files in the directory.
-
-        :type dirName: string
-        :param dirName: name of directory
-        :type filterfunc: function from strings (file names) to truth values
-        :param filterfunc: filtering criteria for file names
-        '''
-        filtered = ifilter(filter_func, iter(os.listdir(dir_name)))
-        paths = (os.path.join(dir_name, fname) for fname in filtered)
-        return procs[proc_type](partial_func, paths)
-
-    return open_dir
-
-
-def imap_dir(func, *args, **kwargs):
-    return proc_dir('map', func, *args, **kwargs)
-
-
-def reduce_dir(func, *args, **kwargs):
-    return proc_dir('reduce', func, *args, **kwargs)
-
-
-def write_to_csv(file_name, data, header, **kwargs):
+def write_to_table(file_name, data, header=None, **kwargs):
     '''Writes data to file specified by filename.
 
     :type file_name: string
@@ -155,8 +107,12 @@ def write_to_csv(file_name, data, header, **kwargs):
     dialect (eg. "excel").
     '''
     with open(file_name, 'w') as f:
-        output = DictWriter(f, header, **kwargs)
-        output.writeheader()
+        if header:
+            output = csv.DictWriter(f, header, **kwargs)
+            output.writeheader()
+            data = create_row_dicts(header, data, fill_val=output.restval)
+        else:
+            output = csv.writer(f, **kwargs)
         output.writerows(data)
 
 
@@ -301,7 +257,6 @@ def median(iterable):
 
 
 #================================= __MAIN__ ===================================
-
 
 def main():
     pass
