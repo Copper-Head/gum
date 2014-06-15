@@ -11,16 +11,11 @@
 
 #===================== IMPORTS --- SETUP --- GLOBAL VARS ======================
 import os
-import sys
 import re
 import logging
 import cPickle
 
 import csv
-from collections import *
-from itertools import *
-from functools import *
-from operator import *
 from time import localtime
 
 
@@ -52,15 +47,18 @@ def read_table(file_name, function=None, **fmtparams):
         # check if passed file has a header
         detect_header = csv.Sniffer().has_header(opened_file.read(1024))
         opened_file.seek(0)
-        # if column names were explicitly passed of header was detected...
+        # if column names were explicitly passed or header was detected...
         if 'fieldnames' in fmtparams or detect_header:
             # ,,, use Dictreader 
             reader = csv.DictReader(opened_file, **fmtparams)
         else:
             # otherwise create a simple reader
             reader = csv.reader(opened_file, **fmtparams)
+        # if user passed function, give it the reader object for processing
         if function:
             return function(reader)
+        # otherwise turn reader into tuple, otherwise the file gets closed 
+        # preventing further processing
         return tuple(reader)
 
 
