@@ -28,7 +28,14 @@ def gen_file_paths(dir_name, filter_func=None):
     '''A function for wrapping all the os.path commands involved in listing files
     in a directory, then turning file names into file paths by concatenating
     them with the directory name.
+    
     This also optionally supports filtering file names using filter_func.
+
+    :param dir_name: name of directory to list files in
+    :type dir_name: string
+    :param filter_func: optional name of function to filter file names by
+    :type filter_func: None by default, function if passed
+    :returns: iterator over paths for files in dir_name
     '''
     if filter_func:
         just_file_names = filter(filter_func, os.listdir(dir_name))

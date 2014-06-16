@@ -1,0 +1,38 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item add\_newlines() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter C
+  \item create\_debug\_log() (in module gum), \hyperpage{3}
+  \item create\_row\_dicts() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter F
+  \item find\_something() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter G
+  \item gen\_file\_paths() (in module gum), \hyperpage{3}
+  \item gum (module), \hyperpage{3}
+
+  \indexspace
+  \bigletter P
+  \item pickle\_data() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter R
+  \item read\_table() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter S
+  \item subset\_dict() (in module gum), \hyperpage{3}
+
+  \indexspace
+  \bigletter W
+  \item write\_to\_table() (in module gum), \hyperpage{3}
+  \item write\_to\_txt() (in module gum), \hyperpage{4}
+
+\end{theindex}

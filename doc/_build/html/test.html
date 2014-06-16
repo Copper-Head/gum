@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gum for Python 2.X &mdash; gum 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gum 0 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to gum’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to gum’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">gum 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gum">
+<span id="gum-for-python-2-x"></span><h1>Gum for Python 2.X<a class="headerlink" href="#module-gum" title="Permalink to this headline">¶</a></h1>
+<p>Gum, a swiss-army-knife module.</p>
+<dl class="function">
+<dt id="gum.create_debug_log">
+<tt class="descclassname">gum.</tt><tt class="descname">create_debug_log</tt><big>(</big><em>base='error'</em>, <em>ext='.log'</em>, <em>separator='_'</em>, <em>app='DEFAULT'</em><big>)</big><a class="reference internal" href="_modules/gum.html#create_debug_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.create_debug_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for creating a logger.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileNameBase</strong> &#8211; base for the log file name to which date, time,</td>
+</tr>
+</tbody>
+</table>
+<p>and the extension are later attached.
+:type ext: string
+:param ext: string for an extension
+:type separator: string
+:param separator: character used to separate different parts of the 
+filename
+:type app: string
+:param app: name for the application that generates the error</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gum.create_row_dicts">
+<tt class="descclassname">gum.</tt><tt class="descname">create_row_dicts</tt><big>(</big><em>fields</em>, <em>data</em>, <em>fill_val='NA'</em><big>)</big><a class="reference internal" href="_modules/gum.html#create_row_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.create_row_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper generator function for the write_to_table(). Collecting data
+is often much more efficient and clear when this data is stored in tuples
+or lists, not dictionaries.
+Python&#8217;s csv DictWriter class requires that it be passed a sequence of 
+dictionaries, however.
+This function takes a header list of column names as well as some data in
+the form of a sequence of rows (which can be tuples or lists) and converts
+every row in the data to a dictionary usable by DictWriter.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gum.gen_file_paths">
+<tt class="descclassname">gum.</tt><tt class="descname">gen_file_paths</tt><big>(</big><em>dir_name</em>, <em>filter_func=None</em><big>)</big><a class="reference internal" href="_modules/gum.html#gen_file_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.gen_file_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function for wrapping all the os.path commands involved in listing files
+in a directory, then turning file names into file paths by concatenating
+them with the directory name.</p>
+<p>This also optionally supports filtering file names using filter_func.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dir_name</strong> (<em>string</em>) &#8211; name of directory to list files in</li>
+<li><strong>filter_func</strong> (<em>None by default, function if passed</em>) &#8211; optional name of function to filter file names by</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterator over paths for files in dir_name</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gum.pickle_data">
+<tt class="descclassname">gum.</tt><tt class="descname">pickle_data</tt><big>(</big><em>data</em>, <em>file_name</em>, <em>ext='.picl'</em><big>)</big><a class="reference internal" href="_modules/gum.html#pickle_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.pickle_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for picling any data.
+:type data: any
+:param data: python object to be pickled
+:type fileName: string
+:param fileName: specifies the name of the pickled file
+:type ext: string
+:param ext: adds and extension to the file name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gum.read_table">
+<tt class="descclassname">gum.</tt><tt class="descname">read_table</tt><big>(</big><em>file_name</em>, <em>function=None</em>, <em>**fmtparams</em><big>)</big><a class="reference internal" href="_modules/gum.html#read_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.read_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that simplifies reading it table files of any kind.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gum.write_to_table">
+<tt class="descclassname">gum.</tt><tt class="descname">write_to_table</tt><big>(</big><em>file_name</em>, <em>data</em>, <em>header=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/gum.html#write_to_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gum.write_to_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to file specified by filename.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_name</strong> (<em>string</em>) &#8211; name of the file to be created</li>
+<li><strong>data</strong> (<em>iterable</em>) &#8211; data we want to write to file</li>
+<li><strong>header</strong> (<em>tuple or list</em>) &#8211; sequences of columns to appear in the output</li>
+<li><strong>kwargs</strong> (<em>dictionary</em>) &#8211; parameters to be passed to DictWriter</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing, just writes data to file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to gum&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/test.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to gum’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">gum 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Ilia Kurenkov.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

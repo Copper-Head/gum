@@ -1,0 +1,363 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gum &mdash; gum 0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gum 0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gum 0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for gum</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Gum, a swiss-army-knife module.&#39;&#39;&#39;</span>
+
+<span class="c"># This program is free and subject to the conditions of the MIT license.</span>
+<span class="c"># If you care to read that, here&#39;s a link:</span>
+<span class="c"># http://opensource.org/licenses/MIT</span>
+
+<span class="c"># To-Do:</span>
+<span class="c"># some automation of text file writing: functions to write to files with</span>
+<span class="c"># new-lines or commas</span>
+<span class="c"># some more general purpose function to create filenames with dates</span>
+<span class="c"># currently that&#39;s hidden inside the log creation function, but can be useful</span>
+<span class="c"># for other filename generation tasks as well.</span>
+
+<span class="c">#===================== IMPORTS --- SETUP --- GLOBAL VARS ======================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">cPickle</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">localtime</span>
+
+
+<span class="c">#============================ File I/O Functions ==============================</span>
+
+
+<div class="viewcode-block" id="gen_file_paths"><a class="viewcode-back" href="../test.html#gum.gen_file_paths">[docs]</a><span class="k">def</span> <span class="nf">gen_file_paths</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">filter_func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A function for wrapping all the os.path commands involved in listing files</span>
+<span class="sd">    in a directory, then turning file names into file paths by concatenating</span>
+<span class="sd">    them with the directory name.</span>
+<span class="sd">    </span>
+<span class="sd">    This also optionally supports filtering file names using filter_func.</span>
+
+<span class="sd">    :param dir_name: name of directory to list files in</span>
+<span class="sd">    :type dir_name: string</span>
+<span class="sd">    :param filter_func: optional name of function to filter file names by</span>
+<span class="sd">    :type filter_func: None by default, function if passed</span>
+<span class="sd">    :returns: iterator over paths for files in dir_name</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">filter_func</span><span class="p">:</span>
+        <span class="n">just_file_names</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">filter_func</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">just_file_names</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">just_file_names</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="read_table"><a class="viewcode-back" href="../test.html#gum.read_table">[docs]</a><span class="k">def</span> <span class="nf">read_table</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Function that simplifies reading it table files of any kind.&#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">opened_file</span><span class="p">:</span>
+        <span class="c"># if user hasn&#39;t defined a dialect, try to sniff it out</span>
+        <span class="k">if</span> <span class="s">&#39;dialect&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fmtparams</span><span class="p">:</span>
+            <span class="n">fmtparams</span><span class="p">[</span><span class="s">&#39;dialect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">Sniffer</span><span class="p">()</span><span class="o">.</span><span class="n">sniff</span><span class="p">(</span><span class="n">opened_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>
+            <span class="c"># this line resets the file object to its beginning</span>
+            <span class="n">opened_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c"># check if passed file has a header</span>
+        <span class="n">detect_header</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">Sniffer</span><span class="p">()</span><span class="o">.</span><span class="n">has_header</span><span class="p">(</span><span class="n">opened_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>
+        <span class="n">opened_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c"># if column names were explicitly passed or header was detected...</span>
+        <span class="k">if</span> <span class="s">&#39;fieldnames&#39;</span> <span class="ow">in</span> <span class="n">fmtparams</span> <span class="ow">or</span> <span class="n">detect_header</span><span class="p">:</span>
+            <span class="c"># ,,, use Dictreader </span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">opened_file</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># otherwise create a simple reader</span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">opened_file</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">)</span>
+        <span class="c"># if user passed function, give it the reader object for processing</span>
+        <span class="k">if</span> <span class="n">function</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+        <span class="c"># otherwise turn reader into tuple, otherwise the file gets closed </span>
+        <span class="c"># preventing further processing</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+
+
+<span class="c">################################################################################</span>
+<span class="c">## Writing to files</span>
+<span class="c">################################################################################</span>
+</div>
+<div class="viewcode-block" id="create_row_dicts"><a class="viewcode-back" href="../test.html#gum.create_row_dicts">[docs]</a><span class="k">def</span> <span class="nf">create_row_dicts</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fill_val</span><span class="o">=</span><span class="s">&#39;NA&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Helper generator function for the write_to_table(). Collecting data</span>
+<span class="sd">    is often much more efficient and clear when this data is stored in tuples</span>
+<span class="sd">    or lists, not dictionaries.</span>
+<span class="sd">    Python&#39;s csv DictWriter class requires that it be passed a sequence of </span>
+<span class="sd">    dictionaries, however.</span>
+<span class="sd">    This function takes a header list of column names as well as some data in</span>
+<span class="sd">    the form of a sequence of rows (which can be tuples or lists) and converts</span>
+<span class="sd">    every row in the data to a dictionary usable by DictWriter.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">length_difference</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="s">&#39;There are more rows than labels for them: {0}&#39;</span>
+        <span class="k">if</span> <span class="n">length_difference</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Here are the column labels&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Here are the rows&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">length_difference</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">length_difference</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="p">(</span><span class="n">fill_val</span><span class="p">,)</span> <span class="o">*</span> <span class="n">length_difference</span>
+        <span class="k">yield</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="write_to_table"><a class="viewcode-back" href="../test.html#gum.write_to_table">[docs]</a><span class="k">def</span> <span class="nf">write_to_table</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Writes data to file specified by filename.</span>
+
+<span class="sd">    :type file_name: string</span>
+<span class="sd">    :param file_name: name of the file to be created</span>
+<span class="sd">    :type data: iterable</span>
+<span class="sd">    :param data: data we want to write to file</span>
+<span class="sd">    :type header: tuple or list</span>
+<span class="sd">    :param header: sequences of columns to appear in the output</span>
+<span class="sd">    :type kwargs: dictionary</span>
+<span class="sd">    :param kwargs: parameters to be passed to DictWriter</span>
+<span class="sd">    :returns: Nothing, just writes data to file</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">create_row_dicts</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fill_val</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">restval</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="c"># def write_to_txt(file_name, data, mode=&#39;w&#39;, AddNewLines=False, **kwargs):</span>
+<span class="c">#     &#39;&#39;&#39;Writes data to a text file.</span>
+
+<span class="c">#     :type fName: string</span>
+<span class="c">#     :param fName: name of the file to be created</span>
+<span class="c">#     :type data: iterable</span>
+<span class="c">#     :param data: some iterable of strings or lists of strings (not a string)</span>
+<span class="c">#     :type addNewLines: bool</span>
+<span class="c">#     :param addNewLines: determines if it&#39;s necessary to add newline chars to</span>
+<span class="c">#     members of list</span>
+<span class="c">#     :type kwargs: dict</span>
+<span class="c">#     :param kwargs: key word args to be passed to list_to_plain_text, if needed</span>
+<span class="c">#     &#39;&#39;&#39;</span>
+<span class="c">#     if AddNewLines:</span>
+<span class="c">#         data = add_newlines(data, **kwargs)</span>
+<span class="c">#     with open(file_name, mode=mode) as f:</span>
+<span class="c">#         f.writelines(data)</span>
+
+
+<span class="c">#-------------------------- Logging and Pickling ------------------------------</span>
+</div>
+<div class="viewcode-block" id="create_debug_log"><a class="viewcode-back" href="../test.html#gum.create_debug_log">[docs]</a><span class="k">def</span> <span class="nf">create_debug_log</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s">&#39;.log&#39;</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="s">&#39;DEFAULT&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;wrapper for creating a logger.</span>
+
+<span class="sd">    :type base: string</span>
+<span class="sd">    :param fileNameBase: base for the log file name to which date, time,</span>
+<span class="sd">    and the extension are later attached.</span>
+<span class="sd">    :type ext: string</span>
+<span class="sd">    :param ext: string for an extension</span>
+<span class="sd">    :type separator: string</span>
+<span class="sd">    :param separator: character used to separate different parts of the </span>
+<span class="sd">    filename</span>
+<span class="sd">    :type app: string</span>
+<span class="sd">    :param app: name for the application that generates the error</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#sanity-checking the extension</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">ext</span>
+
+    <span class="n">date</span> <span class="o">=</span> <span class="n">localtime</span><span class="p">()</span>
+    <span class="c">#create log file name</span>
+    <span class="n">errorFile</span> <span class="o">=</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">tm_year</span><span class="p">),</span>
+                          <span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">tm_mon</span><span class="p">),</span>
+                          <span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">tm_mday</span><span class="p">),</span>
+                          <span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">tm_hour</span><span class="p">),</span>
+                          <span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">tm_min</span><span class="p">),</span>
+                          <span class="n">base</span> <span class="o">+</span> <span class="n">ext</span><span class="p">])</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">errorFile</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="pickle_data"><a class="viewcode-back" href="../test.html#gum.pickle_data">[docs]</a><span class="k">def</span> <span class="nf">pickle_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s">&#39;.picl&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;wrapper for picling any data.</span>
+<span class="sd">    :type data: any</span>
+<span class="sd">    :param data: python object to be pickled</span>
+<span class="sd">    :type fileName: string</span>
+<span class="sd">    :param fileName: specifies the name of the pickled file</span>
+<span class="sd">    :type ext: string</span>
+<span class="sd">    :param ext: adds and extension to the file name</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#sanity-checking the extension</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">ext</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span> <span class="o">+</span> <span class="n">ext</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">cPickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+
+<span class="c">#============================ Data Manipulation Functions =====================</span>
+
+<span class="c"># def add_newlines(input_iter, newline=&#39;\n&#39;, item_type=str):</span>
+<span class="c">#     &#39;&#39;&#39;Takes a iterable, adds a new line character to the end of each of its</span>
+<span class="c">#     members and then returns a generator of the newly created items.</span>
+<span class="c">#     The idea is to convert some sequence that was created with no concern for</span>
+<span class="c">#     spliting it into lines into something that will produce a text file.</span>
+<span class="c">#     It is assumed that the only input types will be sequences of lists or</span>
+<span class="c">#     strings, because these are the only practically reasonable types to be</span>
+<span class="c">#     written to files.</span>
+<span class="c">#     It is also assumed that by default the sequence will consist of strings and</span>
+<span class="c">#     that the lines will be separated by a Unix newline character.</span>
+<span class="c">#     This behavior can be changed by passing different newline and/or itemType</span>
+<span class="c">#     arguments.</span>
+<span class="c">#     &#39;&#39;&#39;</span>
+<span class="c">#     return (l + item_type(newline) for l in input_iter)</span>
+
+
+<span class="c"># def newline_list(input_list):</span>
+<span class="c">#     return add_newlines(input_list, item_type=list)</span>
+
+
+<span class="c"># def find_something(smthng, string, All=False):</span>
+<span class="c">#     &#39;&#39;&#39;I&#39;m not sure I should keep this&#39;&#39;&#39;</span>
+<span class="c">#     regex = re.compile(smthng)</span>
+<span class="c">#     if All:</span>
+<span class="c">#         return regex.findall(string)</span>
+<span class="c">#     return regex.findall(string)[0]</span>
+
+
+<span class="c"># def subset_dict(src_dict, relevants, replace=False, exclude=False):</span>
+<span class="c">#     &#39;&#39;&#39;Given some keys and a dictionary returns a dictionary with only</span>
+<span class="c">#     specified keys. Assumes the keys are in fact present and will raise an</span>
+<span class="c">#     error if this is not the case&#39;&#39;&#39;</span>
+<span class="c">#     &#39;&#39;&#39;Think about ways to make chains of maps: A &gt; B + B &gt; C turns into A &gt;</span>
+<span class="c">#     C&#39;&#39;&#39;</span>
+<span class="c">#     if replace:</span>
+<span class="c">#         return dict((relevants[x], src_dict[x]) for x in relevants)</span>
+<span class="c">#     if exclude:</span>
+<span class="c">#         try:</span>
+<span class="c">#             return dict((x, src_dict[x]) for x in src_dict</span>
+<span class="c">#                         if x not in relevants)</span>
+<span class="c">#         except Exception as e:</span>
+<span class="c">#             print &#39;Unable to process this: &#39;, src_dict</span>
+<span class="c">#             raise</span>
+<span class="c">#     try:</span>
+<span class="c">#         return dict((x, src_dict[x]) for x in relevants)</span>
+<span class="c">#     except Exception as e:</span>
+<span class="c">#         print &#39;Unable to process this: &#39;, src_dict</span>
+<span class="c">#         raise e</span>
+
+
+<span class="c">#================================ Statistics ===================================</span>
+</div>
+<span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+    <span class="c"># just in case we got passed an iterator, not a list</span>
+    <span class="n">safety</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">safety</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">safety</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">median</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+    <span class="c"># just in case...</span>
+    <span class="n">safety</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="n">sorted_safety</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">safety</span><span class="p">)</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">safety</span><span class="p">)</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">length</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sorted_safety</span><span class="p">[</span><span class="n">middle</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sorted_safety</span><span class="p">[</span><span class="n">middle</span><span class="p">]</span> <span class="o">+</span> <span class="n">sorted_safety</span><span class="p">[</span><span class="n">middle</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+
+
+<span class="c">#================================= __MAIN__ ===================================</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+
+<span class="c">#------------------------------------------------------------------------------</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gum 0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Ilia Kurenkov.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
