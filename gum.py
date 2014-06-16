@@ -1,3 +1,5 @@
+'''Gum, a swiss-army-knife module.'''
+
 # This program is free and subject to the conditions of the MIT license.
 # If you care to read that, here's a link:
 # http://opensource.org/licenses/MIT
@@ -94,15 +96,12 @@ def write_to_table(file_name, data, header=None, **kwargs):
     :type file_name: string
     :param file_name: name of the file to be created
     :type data: iterable
-    :param data: some iterable of dictionaries each of which
-    must not contain keys absent in the 'header' argument
-    :type header: list
-    :param header: list of columns to appear in the output
-    :type **kwargs: dict
-    :param **kwargs: parameters to be passed to DictWriter.
-    For instance, restvals specifies what to set empty cells to by default or
-    'dialect' loads a whole host of parameters associated with a certain csv
-    dialect (eg. "excel").
+    :param data: data we want to write to file
+    :type header: tuple or list
+    :param header: sequences of columns to appear in the output
+    :type kwargs: dictionary
+    :param kwargs: parameters to be passed to DictWriter
+    :returns: Nothing, just writes data to file
     '''
     with open(file_name, 'w') as f:
         if header:
@@ -114,23 +113,23 @@ def write_to_table(file_name, data, header=None, **kwargs):
         output.writerows(data)
 
 
-def write_to_txt(file_name, data, mode='w', AddNewLines=False, **kwargs):
-    '''Writes data to a text file.
+# def write_to_txt(file_name, data, mode='w', AddNewLines=False, **kwargs):
+#     '''Writes data to a text file.
 
-    :type fName: string
-    :param fName: name of the file to be created
-    :type data: iterable
-    :param data: some iterable of strings or lists of strings (not a string)
-    :type addNewLines: bool
-    :param addNewLines: determines if it's necessary to add newline chars to
-    members of list
-    :type kwargs: dict
-    :param kwargs: key word args to be passed to list_to_plain_text, if needed
-    '''
-    if AddNewLines:
-        data = add_newlines(data, **kwargs)
-    with open(file_name, mode=mode) as f:
-        f.writelines(data)
+#     :type fName: string
+#     :param fName: name of the file to be created
+#     :type data: iterable
+#     :param data: some iterable of strings or lists of strings (not a string)
+#     :type addNewLines: bool
+#     :param addNewLines: determines if it's necessary to add newline chars to
+#     members of list
+#     :type kwargs: dict
+#     :param kwargs: key word args to be passed to list_to_plain_text, if needed
+#     '''
+#     if AddNewLines:
+#         data = add_newlines(data, **kwargs)
+#     with open(file_name, mode=mode) as f:
+#         f.writelines(data)
 
 
 #-------------------------- Logging and Pickling ------------------------------
@@ -144,7 +143,7 @@ def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
     :type ext: string
     :param ext: string for an extension
     :type separator: string
-    :param separator: character used to separate different parts of the
+    :param separator: character used to separate different parts of the 
     filename
     :type app: string
     :param app: name for the application that generates the error
@@ -184,54 +183,54 @@ def pickle_data(data, file_name, ext='.picl'):
 
 #============================ Data Manipulation Functions =====================
 
-def add_newlines(input_iter, newline='\n', item_type=str):
-    '''Takes a iterable, adds a new line character to the end of each of its
-    members and then returns a generator of the newly created items.
-    The idea is to convert some sequence that was created with no concern for
-    spliting it into lines into something that will produce a text file.
-    It is assumed that the only input types will be sequences of lists or
-    strings, because these are the only practically reasonable types to be
-    written to files.
-    It is also assumed that by default the sequence will consist of strings and
-    that the lines will be separated by a Unix newline character.
-    This behavior can be changed by passing different newline and/or itemType
-    arguments.
-    '''
-    return (l + item_type(newline) for l in input_iter)
+# def add_newlines(input_iter, newline='\n', item_type=str):
+#     '''Takes a iterable, adds a new line character to the end of each of its
+#     members and then returns a generator of the newly created items.
+#     The idea is to convert some sequence that was created with no concern for
+#     spliting it into lines into something that will produce a text file.
+#     It is assumed that the only input types will be sequences of lists or
+#     strings, because these are the only practically reasonable types to be
+#     written to files.
+#     It is also assumed that by default the sequence will consist of strings and
+#     that the lines will be separated by a Unix newline character.
+#     This behavior can be changed by passing different newline and/or itemType
+#     arguments.
+#     '''
+#     return (l + item_type(newline) for l in input_iter)
 
 
-def newline_list(input_list):
-    return add_newlines(input_list, item_type=list)
+# def newline_list(input_list):
+#     return add_newlines(input_list, item_type=list)
 
 
-def find_something(smthng, string, All=False):
-    '''I'm not sure I should keep this'''
-    regex = re.compile(smthng)
-    if All:
-        return regex.findall(string)
-    return regex.findall(string)[0]
+# def find_something(smthng, string, All=False):
+#     '''I'm not sure I should keep this'''
+#     regex = re.compile(smthng)
+#     if All:
+#         return regex.findall(string)
+#     return regex.findall(string)[0]
 
 
-def subset_dict(src_dict, relevants, replace=False, exclude=False):
-    '''Given some keys and a dictionary returns a dictionary with only
-    specified keys. Assumes the keys are in fact present and will raise an
-    error if this is not the case'''
-    '''Think about ways to make chains of maps: A > B + B > C turns into A >
-    C'''
-    if replace:
-        return dict((relevants[x], src_dict[x]) for x in relevants)
-    if exclude:
-        try:
-            return dict((x, src_dict[x]) for x in src_dict
-                        if x not in relevants)
-        except Exception as e:
-            print 'Unable to process this: ', src_dict
-            raise
-    try:
-        return dict((x, src_dict[x]) for x in relevants)
-    except Exception as e:
-        print 'Unable to process this: ', src_dict
-        raise e
+# def subset_dict(src_dict, relevants, replace=False, exclude=False):
+#     '''Given some keys and a dictionary returns a dictionary with only
+#     specified keys. Assumes the keys are in fact present and will raise an
+#     error if this is not the case'''
+#     '''Think about ways to make chains of maps: A > B + B > C turns into A >
+#     C'''
+#     if replace:
+#         return dict((relevants[x], src_dict[x]) for x in relevants)
+#     if exclude:
+#         try:
+#             return dict((x, src_dict[x]) for x in src_dict
+#                         if x not in relevants)
+#         except Exception as e:
+#             print 'Unable to process this: ', src_dict
+#             raise
+#     try:
+#         return dict((x, src_dict[x]) for x in relevants)
+#     except Exception as e:
+#         print 'Unable to process this: ', src_dict
+#         raise e
 
 
 #================================ Statistics ===================================
