@@ -35,7 +35,7 @@ def gen_file_paths(dir_name, filter_func=None):
     :type dir_name: string
     :param filter_func: optional name of function to filter file names by
     :type filter_func: None by default, function if passed
-    :returns: iterator over paths for files in dir_name
+    :returns: iterator over paths for files in *dir_name*
     '''
     if filter_func:
         just_file_names = filter(filter_func, os.listdir(dir_name))
@@ -45,8 +45,18 @@ def gen_file_paths(dir_name, filter_func=None):
     return (os.path.join(dir_name, file_name) for file_name in just_file_names)
 
 
-def read_table(file_name, function=None, **fmtparams):
-    ''' Function that simplifies reading it table files of any kind.'''
+def read_table(file_name, processor=None, **fmtparams):
+    ''' Function that simplifies reading table files of any kind.
+
+    Optionally takes a function that processes the csv while it's open.
+
+    :param file_name: name of the table file to open
+    :type file_name: string
+    :param processor: (optional) a function to process the table file
+    :type processor: None (default) or function
+    :fmtparams: formatting parameters for **csv.Dictreader** or **csv.reader**
+    :returns: tuple sequence of lines or result of *processor*
+    '''
     with open(file_name) as opened_file:
         # if user hasn't defined a dialect, try to sniff it out
         if 'dialect' not in fmtparams:
@@ -84,6 +94,14 @@ def create_row_dicts(fields, data, fill_val='NA'):
     This function takes a header list of column names as well as some data in
     the form of a sequence of rows (which can be tuples or lists) and converts
     every row in the data to a dictionary usable by DictWriter.
+
+    :param fields: a tuple of list of column labels
+    :type fields: iterable
+    :param data: sequence of rows to be turned into dictionaries
+    :type data: iterable
+    :param fill_val: (optional) specifies what to fill empty fields with
+    :type fill_val: string
+    :yields: a dict usable by **csv.DictWriter**
     '''
     for row in data:
         length_difference = len(fields) - len(row)
@@ -108,7 +126,7 @@ def write_to_table(file_name, data, header=None, **kwargs):
     :param header: sequences of columns to appear in the output
     :type kwargs: dictionary
     :param kwargs: parameters to be passed to DictWriter
-    :returns: Nothing, just writes data to file
+    :returns: Nothing, just writes *data* to file
     '''
     with open(file_name, 'w') as f:
         if header:
@@ -142,18 +160,17 @@ def write_to_table(file_name, data, header=None, **kwargs):
 #-------------------------- Logging and Pickling ------------------------------
 
 def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
-    '''wrapper for creating a logger.
+    '''This is a wrapper for creating a logger.
 
     :type base: string
-    :param fileNameBase: base for the log file name to which date, time,
-    and the extension are later attached.
+    :param base: base for the log file name (default = "error")
     :type ext: string
-    :param ext: string for an extension
+    :param ext: (optionally) user-defined file extension
     :type separator: string
-    :param separator: character used to separate different parts of the 
-    filename
+    :param separator: character used to separate different parts of the file name
     :type app: string
     :param app: name for the application that generates the error
+    :returns: instance of **logging.getLogger()**
     '''
     #sanity-checking the extension
     if not ext.startswith('.'):
@@ -161,24 +178,26 @@ def create_debug_log(base='error', ext='.log', separator='_', app='DEFAULT'):
 
     date = localtime()
     #create log file name
-    errorFile = '_'.join([str(date.tm_year),
+    error_file_name = '_'.join([str(date.tm_year),
                           str(date.tm_mon),
                           str(date.tm_mday),
                           str(date.tm_hour),
                           str(date.tm_min),
                           base + ext])
-    logging.basicConfig(filename=errorFile, level=logging.DEBUG)
+    logging.basicConfig(filename=error_file_name, level=logging.DEBUG)
     return logging.getLogger(app)
 
 
 def pickle_data(data, file_name, ext='.picl'):
-    '''wrapper for picling any data.
+    '''This is a wrapper for pickling any data.
+
     :type data: any
     :param data: python object to be pickled
     :type fileName: string
     :param fileName: specifies the name of the pickled file
     :type ext: string
     :param ext: adds and extension to the file name
+    :returns: Nothing, writes *data* to file
     '''
     #sanity-checking the extension
     if not ext.startswith('.'):
