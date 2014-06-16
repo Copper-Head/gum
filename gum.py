@@ -138,23 +138,21 @@ def write_to_table(file_name, data, header=None, **kwargs):
         output.writerows(data)
 
 
-# def write_to_txt(file_name, data, mode='w', AddNewLines=False, **kwargs):
-#     '''Writes data to a text file.
+def write_to_txt(file_name, data, mode='w', newline='\n'):
+    '''Writes data to a text file.
 
-#     :type fName: string
-#     :param fName: name of the file to be created
-#     :type data: iterable
-#     :param data: some iterable of strings or lists of strings (not a string)
-#     :type addNewLines: bool
-#     :param addNewLines: determines if it's necessary to add newline chars to
-#     members of list
-#     :type kwargs: dict
-#     :param kwargs: key word args to be passed to list_to_plain_text, if needed
-#     '''
-#     if AddNewLines:
-#         data = add_newlines(data, **kwargs)
-#     with open(file_name, mode=mode) as f:
-#         f.writelines(data)
+    :type fName: string
+    :param fName: name of the file to be created
+    :type data: iterable
+    :param data: some iterable of strings or lists of strings (not a string)
+    :param mode: (optional) can be changed to "a" to append instead of overwriting
+    :type mode: string
+    :param newline: specifies new line character to add
+    :type newline: string (default), can be anything
+    '''
+    add_newlines = (line + newline for line in data)
+    with open(file_name, mode=mode) as f:
+        f.writelines(add_newlines)
 
 
 #-------------------------- Logging and Pickling ------------------------------
