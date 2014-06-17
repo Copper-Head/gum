@@ -186,24 +186,22 @@
             <span class="n">output</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">output</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
+</div>
+<div class="viewcode-block" id="write_to_txt"><a class="viewcode-back" href="../gum_2_x.html#gum.write_to_txt">[docs]</a><span class="k">def</span> <span class="nf">write_to_txt</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Writes data to a text file.</span>
 
-<span class="c"># def write_to_txt(file_name, data, mode=&#39;w&#39;, AddNewLines=False, **kwargs):</span>
-<span class="c">#     &#39;&#39;&#39;Writes data to a text file.</span>
-
-<span class="c">#     :type fName: string</span>
-<span class="c">#     :param fName: name of the file to be created</span>
-<span class="c">#     :type data: iterable</span>
-<span class="c">#     :param data: some iterable of strings or lists of strings (not a string)</span>
-<span class="c">#     :type addNewLines: bool</span>
-<span class="c">#     :param addNewLines: determines if it&#39;s necessary to add newline chars to</span>
-<span class="c">#     members of list</span>
-<span class="c">#     :type kwargs: dict</span>
-<span class="c">#     :param kwargs: key word args to be passed to list_to_plain_text, if needed</span>
-<span class="c">#     &#39;&#39;&#39;</span>
-<span class="c">#     if AddNewLines:</span>
-<span class="c">#         data = add_newlines(data, **kwargs)</span>
-<span class="c">#     with open(file_name, mode=mode) as f:</span>
-<span class="c">#         f.writelines(data)</span>
+<span class="sd">    :type fName: string</span>
+<span class="sd">    :param fName: name of the file to be created</span>
+<span class="sd">    :type data: iterable</span>
+<span class="sd">    :param data: some iterable of strings or lists of strings (not a string)</span>
+<span class="sd">    :param mode: (optional) can be changed to &quot;a&quot; to append instead of overwriting</span>
+<span class="sd">    :type mode: string</span>
+<span class="sd">    :param newline: specifies new line character to add</span>
+<span class="sd">    :type newline: string (default), can be anything</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">add_newlines</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="n">newline</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">add_newlines</span><span class="p">)</span>
 
 
 <span class="c">#-------------------------- Logging and Pickling ------------------------------</span>

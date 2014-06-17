@@ -6,6 +6,8 @@
 Welcome to gum's documentation!
 ===============================
 
+This is intended primarily as an exercise in setting up and configuring Sphinx, but with the pleasant side effect of producing an API reference of sorts for the *Gum* module
+
 Contents:
 
 .. toctree::
