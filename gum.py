@@ -45,7 +45,7 @@ def gen_file_paths(dir_name, filter_func=None):
     return (os.path.join(dir_name, file_name) for file_name in just_file_names)
 
 
-def read_table(file_name, processor=None, **fmtparams):
+def read_table(file_name, processor=None, logging=True, *args, **fmtparams):
     ''' Function that simplifies reading table files of any kind.
 
     Optionally takes a function that processes the csv while it's open.
@@ -60,24 +60,35 @@ def read_table(file_name, processor=None, **fmtparams):
     with open(file_name) as opened_file:
         # if user hasn't defined a dialect, try to sniff it out
         if 'dialect' not in fmtparams:
-            fmtparams['dialect'] = csv.Sniffer().sniff(opened_file.read(1024))
-            # this line resets the file object to its beginning
-            opened_file.seek(0)
-        # check if passed file has a header
-        detect_header = csv.Sniffer().has_header(opened_file.read(1024))
-        opened_file.seek(0)
+            try:
+                fmtparams['dialect'] = csv.Sniffer().sniff(opened_file.read(1024))
+                # this line resets the file object to its beginning
+                opened_file.seek(0)
+                # check if passed file has a header
+                detect_header = csv.Sniffer().has_header(opened_file.read(1024))
+                opened_file.seek(0)
+            except Exception, e:
+                detect_header = False
+                # don't forget to reset the file object
+                opened_file.seek(0)
+                error_message = '{0} for file: {1}'
+                print error_message.format(e.message, file_name)
+            
         # if column names were explicitly passed or header was detected...
         if 'fieldnames' in fmtparams or detect_header:
-            # ,,, use Dictreader 
+            print 'using dictreader'
             reader = csv.DictReader(opened_file, **fmtparams)
         else:
             # otherwise create a simple reader
             reader = csv.reader(opened_file, **fmtparams)
         # if user passed function, give it the reader object for processing
-        if function:
-            return function(reader)
-        # otherwise turn reader into tuple, otherwise the file gets closed 
-        # preventing further processing
+        if processor:
+            return processor(reader, args)
+        # otherwise turn reader into tuple, because file gets closed 
+        # upon exiting this function preventing further processing
+        if isinstance(reader, csv.DictReader):
+            # converting DictReader to tuple requires dropping first row
+            return tuple(reader)[1:]
         return tuple(reader)
 
 
