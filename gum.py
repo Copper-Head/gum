@@ -58,36 +58,53 @@ def read_table(file_name, processor=None, logging=True, *args, **fmtparams):
     :returns: tuple sequence of lines or result of *processor*
     '''
     with open(file_name) as opened_file:
+
         # if user hasn't defined a dialect, try to sniff it out
         if 'dialect' not in fmtparams:
+            print ('No dialect passed. '
+                'Trying to automatically detect it.')
             try:
                 fmtparams['dialect'] = csv.Sniffer().sniff(opened_file.read(1024))
+                # check if passed file has a header
+            except csv.Error, e:
+                error_message = ('Unable to detect dialect, got an error.\n'
+                                '{0} for file:\n"{1}"')
+                print error_message.format(e.message, file_name)
+            finally:
                 # this line resets the file object to its beginning
                 opened_file.seek(0)
-                # check if passed file has a header
-                detect_header = csv.Sniffer().has_header(opened_file.read(1024))
-                opened_file.seek(0)
+
+            
+        # if user did NOT provide a list of fields
+        if 'fieldnames' not in fmtparams:
+            print 'No header passed, trying to detect it automatically.'
+            try:
+                header_present = csv.Sniffer().has_header(opened_file.read(1024))
             except Exception, e:
-                detect_header = False
-                # don't forget to reset the file object
-                opened_file.seek(0)
-                error_message = '{0} for file: {1}'
+                header_present = False
+                error_message = ('Unable to detect header, got an error.\n'
+                                '{0} for file:\n"{1}"')
                 print error_message.format(e.message, file_name)
+            finally:
+                opened_file.seek(0)        
+        else:
+            header_present = True
             
         # if column names were explicitly passed or header was detected...
-        if 'fieldnames' in fmtparams or detect_header:
-            print 'using dictreader'
+        if header_present:
+            print 'Using csv.DictReader.'
             reader = csv.DictReader(opened_file, **fmtparams)
         else:
             # otherwise create a simple reader
             reader = csv.reader(opened_file, **fmtparams)
         # if user passed function, give it the reader object for processing
         if processor:
-            return processor(reader, args)
+            return processor(reader, *args)
         # otherwise turn reader into tuple, because file gets closed 
-        # upon exiting this function preventing further processing
-        if isinstance(reader, csv.DictReader):
+        # upon exiting this function which prevents further processing
+        if reader.dialect == 'excel':
             # converting DictReader to tuple requires dropping first row
+            print 'Converting Excel file "{0}" to tuple...'.format(file_name)
             return tuple(reader)[1:]
         return tuple(reader)
 
