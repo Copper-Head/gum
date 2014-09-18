@@ -37,12 +37,11 @@ def gen_file_paths(dir_name, filter_func=None):
     :type filter_func: None by default, function if passed
     :returns: iterator over paths for files in *dir_name*
     '''
+    file_paths = tuple(os.path.join(dir_name, file_name) 
+        for file_name in os.listdir(dir_name))
     if filter_func:
-        just_file_names = filter(filter_func, os.listdir(dir_name))
-    else:
-        just_file_names = os.listdir(dir_name)
-    
-    return (os.path.join(dir_name, file_name) for file_name in just_file_names)
+        return filter(filter_func, file_paths)    
+    return file_paths
 
 
 def read_table(file_name, processor=None, logging=True, *args, **fmtparams):
@@ -99,6 +98,7 @@ def read_table(file_name, processor=None, logging=True, *args, **fmtparams):
             reader = csv.reader(opened_file, **fmtparams)
         # if user passed function, give it the reader object for processing
         if processor:
+            print 'using funtion'
             return processor(reader, *args)
         # otherwise turn reader into tuple, because file gets closed 
         # upon exiting this function which prevents further processing
