@@ -35,10 +35,10 @@ def gen_file_paths(dir_name, filter_func=None):
     :type dir_name: string
     :param filter_func: optional name of function to filter file names by
     :type filter_func: None by default, function if passed
-    :returns: iterator over paths for files in *dir_name*
+    :returns: list of paths for files in *dir_name*
     '''
-    file_paths = tuple(os.path.join(dir_name, file_name) 
-        for file_name in os.listdir(dir_name))
+    gen_full_path = lambda f_name: os.path.join(dir_name, f_name)
+    file_paths = map(gen_full_path, os.listdir(dir_name))
     if filter_func:
         return filter(filter_func, file_paths)    
     return file_paths
