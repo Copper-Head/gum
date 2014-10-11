@@ -39,8 +39,10 @@ def gen_file_paths(dir_name, filter_func=None):
     '''
     gen_full_path = lambda f_name: os.path.join(dir_name, f_name)
     file_paths = map(gen_full_path, os.listdir(dir_name))
+
     if filter_func:
-        return filter(filter_func, file_paths)    
+        return filter(filter_func, file_paths)
+
     return file_paths
 
 
